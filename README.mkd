@@ -1,0 +1,84 @@
+# deferred-generator
+JavaScript 1.7のジェネレータを使った一風変わったDeferredライブラリ。クロスブラウザには対応してません！
+
+harmonyの[await式]( http://wiki.ecmascript.org/doku.php?id=strawman:deferred_functions )がアイディアのベースになってます
+
+## サンプル
+
+### 基本
+
+	var main = Deferred.generator(function () {
+		for (var i = 0; i < 3; i ++) {
+			console.log(i);
+			yield Deferred.wait(0.1);
+		}
+	});
+
+	main().then(function () {
+		console.log("done");
+	});
+
+	// 0, 1, 2, done と時間をおいて出力されます
+
+### キャンセル
+
+	var main = Deferred.generator(function () {
+		for (var i = 0; true; i ++) {
+			console.log(i);
+			yield Deferred.wait(0);
+		}
+	});
+	var deferred = main();
+	setTimeout(function () {
+		deferred.cancel();
+	}, 1000);
+
+	// 0, 1, 2, 3 ... と次々に出力され、1秒たつと終了します
+
+### 値を返す
+
+	// 0.1秒待って引数の2倍の値を返す
+	var f = Deferred.generator(function (x) {
+		yield Deferred.wait(0.1);
+		yield Deferred.returnValue(x * 2);
+	});
+	var main = Deferred.generator(function () {
+		for (var i = 0; i <= 4; i ++) {
+			var result = yield f(i);
+			console.log(result);
+		}
+	});
+	main();
+
+	// 0.1秒ごとに 0, 2, 4, 6, 8 と出力されます
+
+### エラー処理
+
+	var f = Deferred.generator(function () {
+		yield Deferred.wait(0.1);
+		throw "hoge";
+	});
+	var main = Deferred.generator(function () {
+		try {
+			yield f();
+		} catch (e) {
+			console.log(e); //=> "hoge"
+		}
+	});
+	main();
+
+## 注意点
+Deferred.generator()を除けばこれはとても低機能です。
+JSDeferredのnextや、MochiKit.Async.DeferredのaddCallbackのような以下のような使い方はできません。
+
+	deferred.then(function () {
+		...
+	}.then(function () {
+		...
+	});
+
+	deferred.then(function () { ... });
+	deferred.then(function () { ... });
+
+JSDeferredでいうところのchild DeferredやMochiKit.Async.Deferredでいうところのchained Deferredのような機能もありません。
+
