@@ -70,7 +70,7 @@ function testGeneratorNested() {
 	var b = generatorToDeferred(function () {
 		for (var i = 0; i < 3; i ++) {
 			out.push("b"+i);
-			yield asyncTimeout(1000);
+			yield asyncTimeout(1);
 		}
 	});
 	var main = generatorToDeferred(function () {

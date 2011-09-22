@@ -1,18 +1,24 @@
 function Deferred() {
-	this._callback = null;
-	this._errback = null;
+	this._callbackFunc = null;
+	this._errbackFunc = null;
 	this.state = "initial"; // initial, set, fired
 }
 
 Deferred.prototype = {
 	callback: function (value) {
-		this._toFired();
-		if (this._callback) this._callback(value);
+		setTimeout(this._callback.bind(this, value));
 	},
 	errback: function (value) {
+		setTimeout(this._errback.bind(this, value));
+	},
+	_callback: function (value) {
 		this._toFired();
-		if (this._errback)
-			this._errback(value);
+		if (this._callbackFunc) this._callbackFunc(value);
+	},
+	_errback: function (value) {
+		this._toFired();
+		if (this._errbackFunc)
+			this._errbackFunc(value);
 		else
 			throw value;
 	},
@@ -20,12 +26,12 @@ Deferred.prototype = {
 		if (this.state === "fired") throw new Error("double fire");
 		this.state = "fired";
 	},
-	then: function(callback, errback) {
+	then: function(callbackFunc, errbackFunc) {
 		if (this.state === "set") throw new Error("double then");
 		if (this.state === "fired") throw new Error("then after fire");
 		this.state = "set";
-		this._callback = callback;
-		this._errback = errback;
+		this._callbackFunc = callbackFunc;
+		this._errbackFunc = errbackFunc;
 	},
 };
 
