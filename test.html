@@ -4,81 +4,63 @@
 <title>deferred-generator test</title>
 <script src="http://closure-library.googlecode.com/svn/trunk/closure/goog/base.js"></script>
 <script src="deferred.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+</head>
+<body>
+<script>
 goog.require('goog.testing.jsunit');
+goog.require("goog.testing.AsyncTestCase");
+</script>
+<script type="application/javascript;version=1.8">
+var asyncTestCase = goog.testing.AsyncTestCase.createAndInstall();
+asyncTestCase.stepTimeout = 0;
 
-function makeTimeoutMock() {
-	var messageQueue = [];
-	return [run, asyncTimeout];
-
-	function run(func) {
-		func();
-		while (messageQueue.length > 0) {
-			var f = messageQueue.shift();
-			f();
-		}
-	}
-
-	function asyncTimeout(msec) {
-		var deferred = new Deferred;
-		messageQueue.push(function () {
-			deferred.callback(undefined);
-		});
-		return deferred;
-	}
+function asyncTimeout(delay) {
+	var deferred = new Deferred();
+	setTimeout(function () {
+		deferred.callback();
+	}, delay);
+	return deferred;
 }
 
 function testDeferredBasic() {
-	var out = [];
+	asyncTestCase.waitForAsync();
 	var deferred = new Deferred;
 	deferred.then(function (x) {
-		out.push(x);
+		assertEquals(42, x);
+		asyncTestCase.continueTesting();
 	});
 	deferred.callback(42);
-	assertArrayEquals([42], out);
 }
 
 function testDeferredErrback() {
-	var out = [];
+	asyncTestCase.waitForAsync();
 	var deferred = new Deferred;
 	deferred.then(function (x) {
-		out.push(["callback", x]);
+		assert(false);
 	}, function (x) {
-		out.push(["errback", x]);
+		assertEquals(42, x);
+		asyncTestCase.continueTesting();
 	});
 	deferred.errback(42);
-	assertArrayEquals([["errback", 42]], out);
-}
-
-function testDeferredNotCatchedErrback() {
-	var deferred = new Deferred;
-	try {
-		deferred.errback(42);
-	} catch (e) {
-		assertEquals(42, e);
-	}
 }
 
 function testGeneratorTimeout() {
-	var done = false;
-	var [run, asyncTimeout] = makeTimeoutMock();
+	asyncTestCase.waitForAsync();
 	var main = generatorToDeferred(function () {
 		var x = 0;
 		yield asyncTimeout(1);
 		assertEquals(1, ++x);
 		yield asyncTimeout(1);
 		assertEquals(2, ++x);
-		done = true;
+		asyncTestCase.continueTesting();
 	});
 
-	run(main);
-	assertEquals("done", true, done);
+	main();
 }
 
 function testGeneratorNested() {
-	var done = false;
+	asyncTestCase.waitForAsync();
 	var out = [];
-	var [run, asyncTimeout] = makeTimeoutMock();
 	var a = generatorToDeferred(function () {
 		for (var i = 0; i < 3; i ++) {
 			out.push("a"+i);
@@ -88,23 +70,21 @@ function testGeneratorNested() {
 	var b = generatorToDeferred(function () {
 		for (var i = 0; i < 3; i ++) {
 			out.push("b"+i);
-			yield asyncTimeout(1);
+			yield asyncTimeout(1000);
 		}
 	});
 	var main = generatorToDeferred(function () {
 		yield a(asyncTimeout);
 		yield b(asyncTimeout);
-		done = true;
+		assertArrayEquals(["a0", "a1", "a2", "b0", "b1", "b2"], out);
+		asyncTestCase.continueTesting();
 	});
 
-	run(main);
-	assertArrayEquals(["a0", "a1", "a2", "b0", "b1", "b2"], out);
-	assertEquals("done", true, done);
+	main();
 }
 
 function testGeneratorThrow() {
-	var done = false;
-	var [run, asyncTimeout] = makeTimeoutMock();
+	asyncTestCase.waitForAsync();
 	var asyncThrow = generatorToDeferred(function (e) {
 		yield asyncTimeout(1);
 		throw e;
@@ -116,13 +96,10 @@ function testGeneratorThrow() {
 		} catch (e) {
 			assertEquals(42, e);
 		}
-		done = true;
+		asyncTestCase.continueTesting();
 	});
-	run(main);
-	assertEquals("done", true, done);
+	main();
 }
 </script>
-</head>
-<body>
 </body>
 </html>
