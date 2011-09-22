@@ -86,6 +86,22 @@ function testGeneratorNested() {
 	main();
 }
 
+function testGeneratorYieldResult() {
+	asyncTestCase.waitForAsync();
+	function f() {
+		var deferred = new Deferred;
+		deferred.callback(42);
+		return deferred;
+	}
+	var main = generatorToDeferred(function () {
+		var value = yield f();
+		assertEquals(42, value);
+		asyncTestCase.continueTesting();
+	});
+
+	main();
+}
+
 function testGeneratorThrow() {
 	asyncTestCase.waitForAsync();
 	var asyncThrow = generatorToDeferred(function (e) {
