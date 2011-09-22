@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>deferred-generator test</title>
+<script src="http://closure-library.googlecode.com/svn/trunk/closure/goog/base.js"></script>
+<script src="deferred.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+goog.require('goog.testing.jsunit');
+
+function makeTimeoutMock() {
+	var messageQueue = [];
+	return [run, asyncTimeout];
+
+	function run(func) {
+		func();
+		while (messageQueue.length > 0) {
+			var f = messageQueue.shift();
+			f();
+		}
+	}
+
+	function asyncTimeout(msec) {
+		var deferred = new Deferred;
+		messageQueue.push(function () {
+			deferred.callback(undefined);
+		});
+		return deferred;
+	}
+}
+
+function testTimeout() {
+	var done = false;
+	var [run, asyncTimeout] = makeTimeoutMock();
+	var main = generatorToDeferred(function () {
+		var x = 0;
+		yield asyncTimeout(1);
+		assertEquals(1, ++x);
+		yield asyncTimeout(1);
+		assertEquals(2, ++x);
+		done = true;
+	});
+
+	run(main);
+	assertEquals("done", true, done);
+}
+
+function testNested() {
+	var done = false;
+	var out = [];
+	var [run, asyncTimeout] = makeTimeoutMock();
+	var a = generatorToDeferred(function () {
+		for (var i = 0; i < 3; i ++) {
+			out.push("a"+i);
+			yield asyncTimeout(1);
+		}
+	});
+	var b = generatorToDeferred(function () {
+		for (var i = 0; i < 3; i ++) {
+			out.push("b"+i);
+			yield asyncTimeout(1);
+		}
+	});
+	var main = generatorToDeferred(function () {
+		yield a(asyncTimeout);
+		yield b(asyncTimeout);
+		done = true;
+	});
+
+	run(main);
+	assertArrayEquals(["a0", "a1", "a2", "b0", "b1", "b2"], out);
+	assertEquals("done", true, done);
+}
+</script>
+</head>
+<body>
+</body>
+</html>
