@@ -20,6 +20,23 @@ harmonyの[await式]( http://wiki.ecmascript.org/doku.php?id=strawman:deferred_f
 
 	// 0, 1, 2, done と時間をおいて出力されます
 
+	/*
+	上でmainに代入された関数はだいたい次と同じようなことをします
+	function main() {
+		var deferred = new Deferred;
+		function loop(i) {
+			if (i >= 3) {
+				deferred.callback();
+			} else {
+				console.log(i);
+				Deferred.wait(0.1).then(loop.bind(null, i + 1));
+			}
+		}
+		loop(0);
+		return deferred;
+	}
+	*/
+
 ### キャンセル
 
 	var main = Deferred.generator(function () {
