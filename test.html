@@ -28,7 +28,7 @@ function makeTimeoutMock() {
 	}
 }
 
-function testTimeout() {
+function testGeneratorTimeout() {
 	var done = false;
 	var [run, asyncTimeout] = makeTimeoutMock();
 	var main = generatorToDeferred(function () {
@@ -44,7 +44,7 @@ function testTimeout() {
 	assertEquals("done", true, done);
 }
 
-function testNested() {
+function testGeneratorNested() {
 	var done = false;
 	var out = [];
 	var [run, asyncTimeout] = makeTimeoutMock();
@@ -68,6 +68,26 @@ function testNested() {
 
 	run(main);
 	assertArrayEquals(["a0", "a1", "a2", "b0", "b1", "b2"], out);
+	assertEquals("done", true, done);
+}
+
+function testGeneratorThrow() {
+	var done = false;
+	var [run, asyncTimeout] = makeTimeoutMock();
+	var asyncThrow = generatorToDeferred(function (e) {
+		yield asyncTimeout(1);
+		throw e;
+	});
+	var main = generatorToDeferred(function () {
+		try {
+			yield asyncThrow(42);
+			assert(false);
+		} catch (e) {
+			assertEquals(42, e);
+		}
+		done = true;
+	});
+	run(main);
 	assertEquals("done", true, done);
 }
 </script>
