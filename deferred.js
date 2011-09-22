@@ -48,11 +48,11 @@ Deferred.prototype = {
 	}
 };
 
-function returnValue(value) {
-	return {value: value, __proto__: returnValue.prototype};
-}
+Deferred.returnValue = function (value) {
+	return {value: value, __proto__: Deferred.returnValue.prototype};
+};
 
-function generatorToDeferred(func) {
+Deferred.fromGenerator = function (func) {
 	return function () {
 		var deferred = new Deferred();
 		var generator = func.apply(this, arguments);
@@ -70,7 +70,7 @@ function generatorToDeferred(func) {
 					generator.throw(val);
 				} else {
 					var ret = generator.send(val);
-					if (ret instanceof returnValue) {
+					if (ret instanceof Deferred.returnValue) {
 						deferred.callback(ret.value);
 					} else {
 						waitTask = ret;
@@ -86,5 +86,5 @@ function generatorToDeferred(func) {
 		loop(undefined, false);
 		return deferred;
 	};
-}
+};
 
