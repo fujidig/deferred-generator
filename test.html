@@ -59,7 +59,7 @@ function testDeferredCancel() {
 function testGeneratorBasic() {
 	asyncTestCase.waitForAsync();
 	var out = [];
-	var main = Deferred.fromGenerator(function () {
+	var main = Deferred.generator(function () {
 		out.push(0);
 		yield asyncTimeout(1);
 		out.push(1);
@@ -76,19 +76,19 @@ function testGeneratorBasic() {
 function testGeneratorNested() {
 	asyncTestCase.waitForAsync();
 	var out = [];
-	var a = Deferred.fromGenerator(function () {
+	var a = Deferred.generator(function () {
 		for (var i = 0; i < 3; i ++) {
 			out.push("a"+i);
 			yield asyncTimeout(1);
 		}
 	});
-	var b = Deferred.fromGenerator(function () {
+	var b = Deferred.generator(function () {
 		for (var i = 0; i < 3; i ++) {
 			out.push("b"+i);
 			yield asyncTimeout(1);
 		}
 	});
-	var main = Deferred.fromGenerator(function () {
+	var main = Deferred.generator(function () {
 		yield a(asyncTimeout);
 		yield b(asyncTimeout);
 		assertArrayEquals(["a0", "a1", "a2", "b0", "b1", "b2"], out);
@@ -105,7 +105,7 @@ function testGeneratorYieldResult() {
 		deferred.callback(42);
 		return deferred;
 	}
-	var main = Deferred.fromGenerator(function () {
+	var main = Deferred.generator(function () {
 		var value = yield f();
 		assertEquals(42, value);
 		asyncTestCase.continueTesting();
@@ -116,11 +116,11 @@ function testGeneratorYieldResult() {
 
 function testGeneratorThrow() {
 	asyncTestCase.waitForAsync();
-	var asyncThrow = Deferred.fromGenerator(function (e) {
+	var asyncThrow = Deferred.generator(function (e) {
 		yield asyncTimeout(1);
 		throw e;
 	});
-	var main = Deferred.fromGenerator(function () {
+	var main = Deferred.generator(function () {
 		try {
 			yield asyncThrow(42);
 			assert(false);
@@ -134,7 +134,7 @@ function testGeneratorThrow() {
 
 function testGeneratorReturnValue() {
 	asyncTestCase.waitForAsync();
-	var main = Deferred.fromGenerator(function () {
+	var main = Deferred.generator(function () {
 		yield Deferred.returnValue(42);
 		assert(false);
 	});
@@ -147,7 +147,7 @@ function testGeneratorReturnValue() {
 function testGeneratorCancel() {
 	asyncTestCase.waitForAsync();
 	var out = [];
-	var main = Deferred.fromGenerator(function () {
+	var main = Deferred.generator(function () {
 		out.push(1);
 		yield asyncTimeout(0);
 		out.push(2);

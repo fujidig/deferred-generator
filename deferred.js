@@ -52,7 +52,7 @@ Deferred.returnValue = function (value) {
 	return {value: value, __proto__: Deferred.returnValue.prototype};
 };
 
-Deferred.fromGenerator = function (func) {
+Deferred.generator = function (func) {
 	return function () {
 		var deferred = new Deferred();
 		var generator = func.apply(this, arguments);
