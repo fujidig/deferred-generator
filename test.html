@@ -44,18 +44,21 @@ function testDeferredErrback() {
 	deferred.errback(42);
 }
 
-function testGeneratorTimeout() {
+function testGeneratorBasic() {
 	asyncTestCase.waitForAsync();
+	var out = [];
 	var main = generatorToDeferred(function () {
-		var x = 0;
+		out.push(0);
 		yield asyncTimeout(1);
-		assertEquals(1, ++x);
+		out.push(1);
 		yield asyncTimeout(1);
-		assertEquals(2, ++x);
-		asyncTestCase.continueTesting();
+		out.push(2);
 	});
 
-	main();
+	main().then(function () {
+		assertArrayEquals([0, 1, 2], out);
+		asyncTestCase.continueTesting();
+	});
 }
 
 function testGeneratorNested() {
