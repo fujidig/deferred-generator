@@ -48,6 +48,13 @@ Deferred.prototype = {
 	}
 };
 
+Deferred.wait = function (seconds) {
+	var deferred = new Deferred();
+	var timerId = setTimeout(function () deferred.callback(), seconds * 1000);
+	deferred.canceller = function () clearTimeout(timerId);
+	return deferred;
+};
+
 Deferred.returnValue = function (value) {
 	return {value: value, __proto__: Deferred.returnValue.prototype};
 };

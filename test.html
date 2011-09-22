@@ -14,14 +14,6 @@ goog.require("goog.testing.AsyncTestCase");
 var asyncTestCase = goog.testing.AsyncTestCase.createAndInstall();
 asyncTestCase.stepTimeout = 0;
 
-function asyncTimeout(delay) {
-	var deferred = new Deferred();
-	setTimeout(function () {
-		deferred.callback();
-	}, delay);
-	return deferred;
-}
-
 function testDeferredBasic() {
 	asyncTestCase.waitForAsync();
 	var deferred = new Deferred;
@@ -46,7 +38,7 @@ function testDeferredErrback() {
 
 function testDeferredCancel() {
 	asyncTestCase.waitForAsync();
-	var d = asyncTimeout(0);
+	var d = Deferred.wait(0);
 	d.then(function () {
 		assert(false);
 	});
@@ -61,9 +53,9 @@ function testGeneratorBasic() {
 	var out = [];
 	var main = Deferred.generator(function () {
 		out.push(0);
-		yield asyncTimeout(1);
+		yield Deferred.wait(0);
 		out.push(1);
-		yield asyncTimeout(1);
+		yield Deferred.wait(0);
 		out.push(2);
 	});
 
@@ -79,18 +71,18 @@ function testGeneratorNested() {
 	var a = Deferred.generator(function () {
 		for (var i = 0; i < 3; i ++) {
 			out.push("a"+i);
-			yield asyncTimeout(1);
+			yield Deferred.wait(0);
 		}
 	});
 	var b = Deferred.generator(function () {
 		for (var i = 0; i < 3; i ++) {
 			out.push("b"+i);
-			yield asyncTimeout(1);
+			yield Deferred.wait(0);
 		}
 	});
 	var main = Deferred.generator(function () {
-		yield a(asyncTimeout);
-		yield b(asyncTimeout);
+		yield a();
+		yield b();
 		assertArrayEquals(["a0", "a1", "a2", "b0", "b1", "b2"], out);
 		asyncTestCase.continueTesting();
 	});
@@ -117,7 +109,7 @@ function testGeneratorYieldResult() {
 function testGeneratorThrow() {
 	asyncTestCase.waitForAsync();
 	var asyncThrow = Deferred.generator(function (e) {
-		yield asyncTimeout(1);
+		yield Deferred.wait(0);
 		throw e;
 	});
 	var main = Deferred.generator(function () {
@@ -149,20 +141,20 @@ function testGeneratorCancel() {
 	var out = [];
 	var main = Deferred.generator(function () {
 		out.push(1);
-		yield asyncTimeout(0);
+		yield Deferred.wait(0);
 		out.push(2);
-		yield asyncTimeout(200);
+		yield Deferred.wait(0.2);
 		out.push(3);
 	});
 	var deferred = main();
 	setTimeout(function () {
 		deferred.cancel();
 		out.push("canceled");
-	}, 100);
+	}, 0.1 * 1000);
 	setTimeout(function () {
 		assertArrayEquals([1, 2, "canceled"], out);
 		asyncTestCase.continueTesting();
-	}, 300);
+	}, 0.3 * 1000);
 }
 </script>
 </body>
