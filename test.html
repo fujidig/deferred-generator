@@ -28,6 +28,37 @@ function makeTimeoutMock() {
 	}
 }
 
+function testDeferredBasic() {
+	var out = [];
+	var deferred = new Deferred;
+	deferred.then(function (x) {
+		out.push(x);
+	});
+	deferred.callback(42);
+	assertArrayEquals([42], out);
+}
+
+function testDeferredErrback() {
+	var out = [];
+	var deferred = new Deferred;
+	deferred.then(function (x) {
+		out.push(["callback", x]);
+	}, function (x) {
+		out.push(["errback", x]);
+	});
+	deferred.errback(42);
+	assertArrayEquals([["errback", 42]], out);
+}
+
+function testDeferredNotCatchedErrback() {
+	var deferred = new Deferred;
+	try {
+		deferred.errback(42);
+	} catch (e) {
+		assertEquals(42, e);
+	}
+}
+
 function testGeneratorTimeout() {
 	var done = false;
 	var [run, asyncTimeout] = makeTimeoutMock();
