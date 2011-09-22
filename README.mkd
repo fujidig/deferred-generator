@@ -71,12 +71,14 @@ harmonyの[await式]( http://wiki.ecmascript.org/doku.php?id=strawman:deferred_f
 Deferred.generator()を除けばこれはとても低機能です。
 JSDeferredのnextや、MochiKit.Async.DeferredのaddCallbackのような以下のような使い方はできません。
 
+	// thenをメソッドチェーンしたり
 	deferred.then(function () {
 		...
 	}.then(function () {
 		...
 	});
 
+	// thenを複数回書いたり
 	deferred.then(function () { ... });
 	deferred.then(function () { ... });
 
