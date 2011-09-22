@@ -100,6 +100,18 @@ function testGeneratorThrow() {
 	});
 	main();
 }
+
+function testGeneratorReturnValue() {
+	asyncTestCase.waitForAsync();
+	var main = generatorToDeferred(function () {
+		yield returnValue(42);
+		assert(false);
+	});
+	main().then(function (x) {
+		assertEquals(42, x);
+		asyncTestCase.continueTesting();
+	});
+}
 </script>
 </body>
 </html>
