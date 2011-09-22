@@ -44,6 +44,18 @@ function testDeferredErrback() {
 	deferred.errback(42);
 }
 
+function testDeferredCancel() {
+	asyncTestCase.waitForAsync();
+	var d = asyncTimeout(0);
+	d.then(function () {
+		assert(false);
+	});
+	d.cancel();
+	setTimeout(function () {
+		asyncTestCase.continueTesting();
+	});
+}
+
 function testGeneratorBasic() {
 	asyncTestCase.waitForAsync();
 	var out = [];
@@ -130,6 +142,27 @@ function testGeneratorReturnValue() {
 		assertEquals(42, x);
 		asyncTestCase.continueTesting();
 	});
+}
+
+function testGeneratorCancel() {
+	asyncTestCase.waitForAsync();
+	var out = [];
+	var main = generatorToDeferred(function () {
+		out.push(1);
+		yield asyncTimeout(0);
+		out.push(2);
+		yield asyncTimeout(200);
+		out.push(3);
+	});
+	var deferred = main();
+	setTimeout(function () {
+		deferred.cancel();
+		out.push("canceled");
+	}, 100);
+	setTimeout(function () {
+		assertArrayEquals([1, 2, "canceled"], out);
+		asyncTestCase.continueTesting();
+	}, 300);
 }
 </script>
 </body>
