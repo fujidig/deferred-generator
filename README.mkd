@@ -83,9 +83,47 @@ harmonyの[await式]( http://wiki.ecmascript.org/doku.php?id=strawman:deferred_f
 	});
 	main();
 
+### 再帰
+
+[再帰クイックソートの可視化: Days on the Moon]( http://nanto.asablo.jp/blog/2007/02/06/1167686 )のコードを元にしています
+
+	var quickSort = Deferred.generator(function (data, begin, end, log) {
+		if (begin >= end) return;
+		var pivotPos = partition(data, begin, end);
+		yield log(data);
+		yield quickSort(data, begin, pivotPos, log);
+		yield quickSort(data, pivotPos + 1, end, log);
+	});
+
+	function partition(data, begin, end) {
+		var pivotPos = begin;
+		var pivot = data[pivotPos];
+
+		for (var i = begin + 1; i < end; i++) {
+			if (data[i] < pivot) {
+				var temp = data[i];
+				data[i] = data[pivotPos + 1];
+				data[pivotPos + 1] = data[pivotPos];
+				data[pivotPos] = temp;
+				pivotPos++;
+			}
+		}
+		return pivotPos;
+	}
+
+	var printSleep = Deferred.generator(function (x) {
+		console.log(x);
+		yield Deferred.wait(0.1);
+	});
+
+	var array = [9, 5, 7, 3, 2, 4, 0, 1, 6, 8];
+	quickSort(array, 0, array.length, printSleep).then(function () {
+		console.log("done");
+	});
+
 ## 注意点
 Deferred.generator()を除けばこれはとても低機能です。
-JSDeferredのnextや、MochiKit.Async.DeferredのaddCallbackのような以下のような使い方はできません。
+JSDeferredのnextや、MochiKit.Async.DeferredのaddCallbackのような使い方はできません。
 
 	// thenをメソッドチェーンしたり
 	deferred.then(function () {
@@ -99,4 +137,28 @@ JSDeferredのnextや、MochiKit.Async.DeferredのaddCallbackのような以下�
 	deferred.then(function () { ... });
 
 JSDeferredでいうところのchild DeferredやMochiKit.Async.Deferredでいうところのchained Deferredのような機能もありません。
+
+また、非同期処理をまったく行わないDeferredでも問題なく動くようにDeferred#callbackは必ずsetTimeoutで遅延してから設定されたコールバックを呼びます。
+
+	var main = Deferred.generator(function () {
+		yield Deferred.returnValue(42);
+	});
+	/* または
+	function main() {
+		var deferred = new Deferred;
+		deferred.callback(42);
+		return deferred;
+	}
+	*/
+
+	main().then(function (x) {
+		console.log(x);
+	});
+
+MochiKit.Async.Deferredがやっているように既にcallback()で着火済みのDeferredにコールバック関数を設定すると同期的に呼ぶという方法もありましたが、実装が複雑になるので避けました。
+
+## こだわったところ
+- 実装はシンプルに
+- キャンセル機能
+- 捕捉されなかったエラーは握りつぶさずに再スロー
 
