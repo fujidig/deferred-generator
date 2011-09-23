@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>deferred-generator trial</title>
+<script src="deferred.js" type="application/javascript;version=1.8"></script>
+</head>
+<body>
+<textarea id="source" style="width:100%" rows="20"></textarea><br>
+<button id="run">Run</button>
+<script type="application/javascript;version=1.8">
+document.querySelector("#run").addEventListener("click", function () {
+	eval(document.querySelector("#source").value);
+}, false);
+</script>
+</body>
+</html>
