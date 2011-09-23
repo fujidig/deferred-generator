@@ -11,16 +11,16 @@ Deferred.noop = function() {};
 
 Deferred.prototype = {
 	callback: function (value) {
-		setTimeout(this._callback.bind(this, value));
+		setTimeout(this.callbackSync.bind(this, value));
 	},
 	errback: function (value) {
-		setTimeout(this._errback.bind(this, value));
+		setTimeout(this.errbackSync.bind(this, value));
 	},
-	_callback: function (value) {
+	callbackSync: function (value) {
 		this._toFired("callback()");
 		if (this._callbackFunc) this._callbackFunc(value);
 	},
-	_errback: function (value) {
+	errbackSync: function (value) {
 		this._toFired("errback()");
 		if (this._errbackFunc)
 			this._errbackFunc(value);
@@ -52,7 +52,7 @@ Deferred.prototype = {
 
 Deferred.wait = function (seconds) {
 	var deferred = new Deferred();
-	var timerId = setTimeout(function () deferred.callback(), seconds * 1000);
+	var timerId = setTimeout(function () deferred.callbackSync(), seconds * 1000);
 	deferred.canceller = function () clearTimeout(timerId);
 	return deferred;
 };
