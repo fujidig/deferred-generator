@@ -1,3 +1,5 @@
+// deferred.js - this code is in the Public Domain
+
 function Deferred() {
 	this._callbackFunc = null;
 	this._errbackFunc = null;
